@@ -30,17 +30,17 @@ public class GerenteDaEstacao {
         this.quantidadeDeCaixasNoDeposito = new Semaphore(0);
     }
 
-    public void storeBox(int packerId) throws InterruptedException {return;}
+    public void depositaAsCaixas(int idDoEmpacotador) throws InterruptedException {return;}
 
-    public void loadTrain() throws InterruptedException {return;}
+    public void carregaTrem() throws InterruptedException {return;}
 
     // Métodos para UI e Status
 
-    public void setTrainStatus(String status) {return;}
+    public void setStatusDoTrem(String status) {return;}
 
-    public int getBoxCount() {return 1;}
+    public int getQuantidadeDeCaixasDepositadas() {return 1;}
 
-    public String getTrainStatus() {return "";}
+    public String getStatusDoTrem() {return "";}
 
-    public Map<Integer, String> getPackerStatusMap() {return null;}
+    public Map<Integer, String> getStatusDosEmpacotadores() {return null;}
 }
