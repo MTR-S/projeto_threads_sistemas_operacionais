@@ -18,4 +18,20 @@ public class Empacotador implements Runnable {
     public void run() {
 
     }
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public int getTempoEmpacotamento() {
+        return tempoEmpacotamento;
+    }
+
+    public void setTempoEmpacotamento(int tempoEmpacotamento) {
+        this.tempoEmpacotamento = tempoEmpacotamento;
+    }
 }
