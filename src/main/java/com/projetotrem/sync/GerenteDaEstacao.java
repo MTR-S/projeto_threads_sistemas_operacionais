@@ -1,7 +1,5 @@
 package com.projetotrem.sync;
 
-import com.projetotrem.model.Empacotador;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
@@ -14,7 +12,6 @@ public class GerenteDaEstacao {
     private String statusDoTrem;
     private final Map<Integer, String> statusDosEmpacotadores;
 
-    // Semáforos
     private final Semaphore mutex;
     private final Semaphore espacosDisponiveisNoDeposito;
     private final Semaphore quantidadeDeCaixasNoDeposito;
@@ -32,23 +29,43 @@ public class GerenteDaEstacao {
         this.quantidadeDeCaixasNoDeposito = new Semaphore(0);
     }
 
-    public void depositaAsCaixas(int idDoEmpacotador) throws InterruptedException {return;}
+
+    public void depositaAsCaixas(int idDoEmpacotador) throws InterruptedException {
+        setStatusDosEmpacotadores(idDoEmpacotador, "Esperando vaga");
+        espacosDisponiveisNoDeposito.acquire();
+        mutex.acquire();
+        try {
+            _unsafe_setStatusDosEmpacotadores(idDoEmpacotador, "Armazenando no Deposito");
+
+            quantidadeDeCaixasDepositadas++;
+
+            System.out.println("[+] Empacotador " + idDoEmpacotador + " guardou. Total: " + quantidadeDeCaixasDepositadas);
+        } finally {
+            mutex.release();
+        }
+
+       quantidadeDeCaixasNoDeposito.release();
+    }
 
     public void carregaTrem() throws InterruptedException {return;}
 
-    // Métodos para UI e Status
 
     public void setStatusDoTrem(String status) {return;}
 
     public void setStatusDosEmpacotadores(int idEmpacotador, String status) {
         try {
             mutex.acquire();
-            this.statusDosEmpacotadores.put(idEmpacotador, status);
+
+            _unsafe_setStatusDosEmpacotadores(idEmpacotador, status);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         } finally {
             mutex.release();
         }
+    }
+
+    private void _unsafe_setStatusDosEmpacotadores(int idEmpacotador, String status) {
+        this.statusDosEmpacotadores.put(idEmpacotador, status);
     }
 
     public int getQuantidadeDeCaixasDepositadas() {
