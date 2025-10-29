@@ -36,7 +36,7 @@ public class Empacotador implements Runnable {
 
         long tempo = this.tempoEmpacotamento;
 
-        System.out.println("Iniciando CPU-Bound por " + tempo + "ms...");
+        System.out.println("Iniciando CPU-Bound (Empacotador) por " + tempo + "ms...");
 
         long endTime = System.currentTimeMillis() + tempo;
 
@@ -47,7 +47,7 @@ public class Empacotador implements Runnable {
             soma = soma + Math.sin(Math.random()) + Math.cos(Math.random());
         }
 
-        System.out.println("...Trabalho CPU-Bound concluído.");
+        System.out.println("...Trabalho CPU-Bound (Empacotador) concluído.");
     }
 
     public int getId() {
