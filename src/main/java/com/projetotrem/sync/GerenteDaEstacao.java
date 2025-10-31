@@ -68,6 +68,7 @@ public class GerenteDaEstacao {
         }
 
         espacosDisponiveisNoDeposito.release(capacidadeDoTrem);
+
     }
 
 

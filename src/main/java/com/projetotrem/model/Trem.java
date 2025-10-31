@@ -25,7 +25,7 @@ public class Trem implements Runnable {
 
                 gerenteDaEstacao.setStatusDoTrem("Retornando (B -> A)");
                 processoAleatorioCpuBound();
-
+                gerenteDaEstacao.setStatusDoTrem("Retornando (B -> A)");
             }
         }catch (Exception e) {
             gerenteDaEstacao.setStatusDoTrem("Interrompido");

@@ -33,9 +33,9 @@ public class CenarioPanel extends JPanel implements ActionListener {
     private int TRAIN_SPEED; // Pixels por "tick"
     private boolean isTrainFacingLeft = false;
 
-    private final int Y_POS_BASE = 650;//900;           // Posição para "Dormindo" ou outro estado
-    private final int Y_POS_ESPERANDO_VAGA = 660;//850; // Posição para "Esperando vaga"
-    private final int Y_POS_EMPACOTANDO = 610;//792;    // Posição para "Empacotando" (mais acima)
+    private final int Y_POS_BASE = 510;//650;          // Posição para "Dormindo" ou outro estado
+    private final int Y_POS_ESPERANDO_VAGA = 550;//660; // Posição para "Esperando vaga"
+    private final int Y_POS_EMPACOTANDO = 510;//610;    // Posição para "Empacotando" (mais acima)
 
     private final int ESTEIRA_START_X = 10;
     private final int ESTEIRA_END_X = 480;
@@ -76,14 +76,14 @@ public class CenarioPanel extends JPanel implements ActionListener {
 
         loadImages();
 
-        setPreferredSize(new Dimension(1200, 1000));
+        setPreferredSize(new Dimension(1100, 700));
 
         this.posA = -TREM_LARGURA_DESEJADA;
         this.trainX = posA;
 
         int painelAltura = 600;
         int tremAltura = TREM_ALTURA_DESEJADA;
-        this.trainY = (painelAltura / 2) - (tremAltura / 2);
+        this.trainY = (painelAltura / 2) - (tremAltura / 2) - 60;
         int distanciaTotal = 1200 + TREM_LARGURA_DESEJADA;
 
         // Ticks de 16ms (aprox. 60fps)
@@ -296,7 +296,7 @@ public class CenarioPanel extends JPanel implements ActionListener {
         String statusTrem = gerente.getStatusDoTrem();
 
         int caixasTrem = 0;
-        if (statusTrem.contains("Viajando") || statusTrem.contains("Retornando")) {
+        if (statusTrem.contains("Viajando") /*|| statusTrem.contains("Retornando")*/) {
             caixasTrem = this.capacidadeDoTrem;
         }
 

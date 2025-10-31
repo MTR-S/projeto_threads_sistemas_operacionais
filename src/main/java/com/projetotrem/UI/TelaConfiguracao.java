@@ -98,7 +98,7 @@ public class TelaConfiguracao extends JFrame {
     }
 
     public static void main(String[] args) {
-        // Método responsável por criar a interface swing
+        // Método respon
 
         SwingUtilities.invokeLater(new Runnable() {
             @Override
