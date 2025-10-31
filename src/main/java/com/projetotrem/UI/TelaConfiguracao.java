@@ -98,10 +98,13 @@ public class TelaConfiguracao extends JFrame {
             // 1. Esconder esta janela: this.setVisible(false);
             // 2. Criar e mostrar a janela da simulação: new TelaSimulacao(m, n, ...).setVisible(true);
             // 3. Destruir esta janela: this.dispose();
-
+            /*
             TelaPrincipal telaSim = new TelaPrincipal(m, n, numEmpacotadores, tempoViagem, tempoPacote);
             telaSim.setVisible(true);
+            */
 
+            TelaPrincipalOriginal telaVisual = new TelaPrincipalOriginal(m, n, numEmpacotadores, tempoViagem, tempoPacote);
+            telaVisual.setVisible(true);
             // 4. Fechar e destruir esta janela de configuração
             this.dispose();
 

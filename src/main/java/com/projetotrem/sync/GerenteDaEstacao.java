@@ -145,6 +145,17 @@ public class GerenteDaEstacao {
         }
         return statusDosEmpacotadoresCopia;
     }
+
+    public int getCapacidadeDoTrem() {
+        return this.capacidadeDoTrem;
+    }
+
+    /**
+     * Retorna o M (capacidade do depósito).
+     */
+    public int getCapacidadeDoDeposito() {
+        return this.capacidadeDoDeposito;
+    }
     /*
     public void createEmpacotador(int idEmpacotador, Scanner sc) {
         System.out.println("Qual o tempo de empacotamento em segundos deste empacotador?");
