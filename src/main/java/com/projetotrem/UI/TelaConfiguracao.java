@@ -9,9 +9,8 @@ public class TelaConfiguracao extends JFrame {
 
     private JTextField txtCapacidadeDepositoM;
     private JTextField txtCapacidadeTremN;
-    // private JTextField txtNumEmpacotadores; // [REMOVIDO]
     private JTextField txtTempoViagemTrem;
-    private JTextField txtTempoEmpacotamento; // [REVISADO] - Vamos manter, mas usar como "default"
+    private JTextField txtTempoEmpacotamento;
 
     private JButton btnIniciarSimulacao;
 
@@ -35,13 +34,11 @@ public class TelaConfiguracao extends JFrame {
         txtCapacidadeTremN = new JTextField("5");
         painelFormulario.add(txtCapacidadeTremN);
 
-        // [REMOVIDO] Campo de Nº de Empacotadores
-
         painelFormulario.add(new JLabel("Tempo Viagem Trem (ms):"));
         txtTempoViagemTrem = new JTextField("5000");
         painelFormulario.add(txtTempoViagemTrem);
 
-        painelFormulario.add(new JLabel("Tempo Padrão Pacote (ms):")); // Renomeado para clareza
+        painelFormulario.add(new JLabel("Tempo Padrão Pacote (ms):"));
         txtTempoEmpacotamento = new JTextField("2000");
         painelFormulario.add(txtTempoEmpacotamento);
 
@@ -55,23 +52,20 @@ public class TelaConfiguracao extends JFrame {
         btnIniciarSimulacao.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
+
                 // Chama o método que vai ler e validar os dados
                 iniciarSimulacao();
             }
         });
     }
 
-    /**
-     * Este método é chamado quando o botão "Iniciar" é clicado.
-     */
     private void iniciarSimulacao() {
         try {
             int m = Integer.parseInt(txtCapacidadeDepositoM.getText());
             int n = Integer.parseInt(txtCapacidadeTremN.getText());
 
-            // int numEmpacotadores = Integer.parseInt(txtNumEmpacotadores.getText()); // [REMOVIDO]
             long tempoViagem = Long.parseLong(txtTempoViagemTrem.getText());
-            long tempoPacotePadrao = Long.parseLong(txtTempoEmpacotamento.getText()); // Pega o tempo padrão
+            long tempoPacotePadrao = Long.parseLong(txtTempoEmpacotamento.getText());
 
             if (m < n) {
                 // Mostra uma popup de erro (JOptionPane)
@@ -82,22 +76,16 @@ public class TelaConfiguracao extends JFrame {
                 return;
             }
 
-            // 3. (Por enquanto) Apenas imprimir no console
             System.out.println("--- Configuração Pronta ---");
             System.out.println("Depósito (M): " + m);
             System.out.println("Trem (N): " + n);
-            // System.out.println("Empacotadores: " + numEmpacotadores); // [REMOVIDO]
             System.out.println("Tempo Viagem: " + tempoViagem);
             System.out.println("Tempo Pacote Padrão: " + tempoPacotePadrao);
             System.out.println("---------------------------");
 
-
-            // [MODIFICADO] A chamada do construtor não passa mais 'numEmpacotadores'
-            // Passamos o tempoPacotePadrao para que ele seja a sugestão na popup
             TelaPrincipalOriginal telaVisual = new TelaPrincipalOriginal(m, n, tempoViagem, tempoPacotePadrao);
             telaVisual.setVisible(true);
 
-            // 4. Fechar e destruir esta janela de configuração
             this.dispose();
 
         } catch (NumberFormatException ex) {
@@ -109,13 +97,9 @@ public class TelaConfiguracao extends JFrame {
         }
     }
 
-    /**
-     * Método Main para executar esta janela de forma independente.
-     */
     public static void main(String[] args) {
-        // Todas as aplicações Swing DEVEM iniciar desta forma:
-        // Isso coloca a UI na "Event Dispatch Thread" (EDT),
-        // que é a thread oficial de UI do Swing.
+        // Método responsável por criar a interface swing
+
         SwingUtilities.invokeLater(new Runnable() {
             @Override
             public void run() {
