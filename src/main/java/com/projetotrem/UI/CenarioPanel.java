@@ -42,9 +42,9 @@ public class CenarioPanel extends JPanel implements ActionListener {
 
     // 1. Posições Y (verticais) baseadas no status
     // (Valores do seu código mais recente)
-    private final int Y_POS_BASE = 900;           // Posição para "Dormindo" ou outro estado
-    private final int Y_POS_ESPERANDO_VAGA = 850; // Posição para "Esperando vaga"
-    private final int Y_POS_EMPACOTANDO = 792;    // Posição para "Empacotando" (mais acima)
+    private final int Y_POS_BASE = 650;//900;           // Posição para "Dormindo" ou outro estado
+    private final int Y_POS_ESPERANDO_VAGA = 660;//850; // Posição para "Esperando vaga"
+    private final int Y_POS_EMPACOTANDO = 610;//792;    // Posição para "Empacotando" (mais acima)
 
     // 2. Área da "Esteira" para Posições X (horizontais)
     private final int ESTEIRA_START_X = 10; // Onde o primeiro empacotador começa
@@ -116,7 +116,7 @@ public class CenarioPanel extends JPanel implements ActionListener {
 
         // 3. Calcula a posição Y para o centro:
         // (Metade da Tela) - (Metade do Trem)
-                this.trainY = (painelAltura / 2) - (tremAltura / 2) + 20;
+                this.trainY = (painelAltura / 2) - (tremAltura / 2);
 
         // 4. Iniciar o Timer de animação
         int distanciaTotal = 1200 + TREM_LARGURA_DESEJADA;
