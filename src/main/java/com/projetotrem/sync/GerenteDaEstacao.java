@@ -150,45 +150,7 @@ public class GerenteDaEstacao {
         return this.capacidadeDoTrem;
     }
 
-    /**
-     * Retorna o M (capacidade do depósito).
-     */
     public int getCapacidadeDoDeposito() {
         return this.capacidadeDoDeposito;
     }
-    /*
-    public void createEmpacotador(int idEmpacotador, Scanner sc) {
-        System.out.println("Qual o tempo de empacotamento em segundos deste empacotador?");
-        long tempoEmpacotamento = sc.nextLong();
-        Empacotador empacotador = new Empacotador(this, idEmpacotador, tempoEmpacotamento);
-        Thread t =  new Thread(empacotador);
-        t.start();
-    }
-
-    public void createTrem(int idTrem, Scanner sc) {
-        System.out.println("Qual o tempo de viagem em segundos do trem? Tempo de ir do A para o B");
-        int tempoViagem =  sc.nextInt();
-        Trem trem = new Trem(this, tempoViagem);
-        Thread t =  new Thread(trem);
-        t.start();
-    }
-
-    public void getStatusSistema() {
-        while (true) {
-            for (Map.Entry<Integer, String> entry : getStatusDosEmpacotadores().entrySet()) {
-                Integer id = entry.getKey();
-                String status = entry.getValue();
-                System.out.println("Empacotador ID: " + id + " | Status: " + status);
-            }
-
-            System.out.println("Status do Trem: " + getStatusDoTrem());
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-    }*/
 }
