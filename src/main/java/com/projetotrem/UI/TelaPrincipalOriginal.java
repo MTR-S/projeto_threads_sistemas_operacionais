@@ -25,7 +25,7 @@ public class TelaPrincipalOriginal extends JFrame {
         this.tempoPacotePadrao = tempoPacote; // Salva o tempo padrão
 
         // 2. Iniciar o Frontend (o Painel de Desenho)
-        this.cenarioPanel = new CenarioPanel(gerenteDaEstacao);
+        this.cenarioPanel = new CenarioPanel(gerenteDaEstacao, tempoViagem);
 
         // 3. Configurar a Janela (JFrame)
         setTitle("Simulação Trem de Carga - Visual");

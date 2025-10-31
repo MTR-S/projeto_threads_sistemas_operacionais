@@ -9,6 +9,7 @@ import java.awt.event.ActionListener;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap; // IMPORTANTE: Adicionado para ordenar os empacotadores
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Comparator; // Importar Comparator
@@ -21,6 +22,9 @@ public class CenarioPanel extends JPanel implements ActionListener {
     // --- Imagens (PLACEHOLDERS) ---
     private Image imgBackground;
     private Image imgTrain;
+    private Image imgTrain_Flipped;
+    private Image imgPackerIdle; // Imagem do empacotador parado
+    private Image imgPackerWorking; // Imagem dele trabalhando
 
     // --- (NOVO) Imagens do HUD ---
     private Image imgHudPackerIniciado;
@@ -28,18 +32,53 @@ public class CenarioPanel extends JPanel implements ActionListener {
     private Image imgHudPackerInterrompido;
 
     // --- Estado da Animação ---
-    private int trainX;           // Posição X atual do trem
-    private int trainY;           // Posição Y atual do trem
-    private int trainTargetX;     // Posição X para onde o trem quer ir
-    private final int TRAIN_SPEED = 5; // Pixels por "tick"
+    private int trainX;             // Posição X atual do trem
+    private int trainY;             // Posição Y atual do trem
+    private int trainTargetX;       // Posição X para onde o trem quer ir
+    private int TRAIN_SPEED; // Pixels por "tick"
+    private boolean isTrainFacingLeft = false;
+
+    // --- [NOVA LÓGICA DE POSICIONAMENTO E TAMANHO] ---
+
+    // 1. Posições Y (verticais) baseadas no status
+    // (Valores do seu código mais recente)
+    private final int Y_POS_BASE = 900;           // Posição para "Dormindo" ou outro estado
+    private final int Y_POS_ESPERANDO_VAGA = 850; // Posição para "Esperando vaga"
+    private final int Y_POS_EMPACOTANDO = 792;    // Posição para "Empacotando" (mais acima)
+
+    // 2. Área da "Esteira" para Posições X (horizontais)
+    private final int ESTEIRA_START_X = 10; // Onde o primeiro empacotador começa
+    private final int ESTEIRA_END_X = 480;   // Onde o último empacotador termina
+
+    // 3. (MERGE) TAMANHOS baseados no status
+    // (Valores da nossa discussão anterior, você pode ajustar)
+    private final int LARGURA_BASE = 90;
+    private final int ALTURA_BASE = 90;
+
+    // Como o Y é o mesmo, vou manter o tamanho igual
+    private final int LARGURA_ESPERANDO = 150;
+    private final int ALTURA_ESPERANDO = 150;
+
+    // Tamanho que você usava antes (100x100)
+    private final int LARGURA_EMPACOTANDO = 100;
+    private final int ALTURA_EMPACOTANDO = 100;
+
+    // --- [FIM DA NOVA LÓGICA] ---
 
     // [REMOVIDO] Posições dos empacotadores antigos
-    
+
     private final int TREM_LARGURA_DESEJADA = 350;
     private final int TREM_ALTURA_DESEJADA = 300;
 
     private int capacidadeDoTrem;
     private int capacidadeDoDeposito;
+
+    private final long tempoViagem; // Tempo total da viagem (vem do construtor)
+    private int posA;           // Posição X de início (fora da tela)
+    private int posB = -1;      // Posição X final (fora da tela) - Inicia em -1
+
+    private long animationStartTime; // Relógio: quando a animação (viagem) começou
+    private String lastKnownStatus = "";
 
     // Mapa para guardar o status de cada empacotador
     private Map<Integer, String> packerStatusMap;
@@ -47,10 +86,10 @@ public class CenarioPanel extends JPanel implements ActionListener {
     // Timer para a animação
     private Timer timer;
 
-    public CenarioPanel(GerenteDaEstacao gerente) {
+    public CenarioPanel(GerenteDaEstacao gerente, long tempoViagem) {
         this.gerente = gerente;
         this.packerStatusMap = new HashMap<>();
-
+        this.tempoViagem = tempoViagem;
         this.capacidadeDoTrem = gerente.getCapacidadeDoTrem();
         this.capacidadeDoDeposito = gerente.getCapacidadeDoDeposito();
 
@@ -63,32 +102,59 @@ public class CenarioPanel extends JPanel implements ActionListener {
         setPreferredSize(new Dimension(1200, 1000));
 
         // 3. Definir posições iniciais
-        this.trainX = 0; // Posição A (Esquerda)
-        this.trainTargetX = 0;
+        this.posA = -TREM_LARGURA_DESEJADA;
+        this.trainX = posA;
 
         // --- CÁLCULO PARA CENTRALIZAR O TREM ---
 
         // 1. Pega a altura do painel (que definimos no setPreferredSize)
-        int painelAltura = 600;
+                int painelAltura = 600;
 
         // 2. Pega a altura da imagem do trem (que já foi carregada)
         // (Usamos 'null' como ImageObserver, o que é ok aqui)
-        int tremAltura = imgTrain.getHeight(null);
+        int tremAltura = TREM_ALTURA_DESEJADA;
 
         // 3. Calcula a posição Y para o centro:
         // (Metade da Tela) - (Metade do Trem)
-        this.trainY = (painelAltura / 2) - (tremAltura / 2) - 140;
+                this.trainY = (painelAltura / 2) - (tremAltura / 2) + 20;
 
         // 4. Iniciar o Timer de animação
-        // "Dispara" a cada 16ms (aprox. 60 FPS)
-        timer = new Timer(16, this);
+        int distanciaTotal = 1200 + TREM_LARGURA_DESEJADA;
+
+        // Ticks de 16ms (aprox. 60fps)
+        int tickMs = 16;
+
+        // Quantos "ticks" a animação tem para completar a viagem
+        // (Ex: 5000ms / 16ms = 312.5 ticks)
+        int totalTicks = (int) (tempoViagem / tickMs);
+
+        // Velocidade = Distância / Tempo
+        // (Ex: 1550 pixels / 312.5 ticks = 4.96 pixels/tick)
+        // Usamos Math.ceil e Math.max(1, ...) para garantir que a velocidade
+        // seja sempre pelo menos 1 e um número inteiro.
+        this.TRAIN_SPEED = Math.max(1, (int) Math.ceil((double) distanciaTotal / totalTicks));
+
+        System.out.println("Tempo de Viagem: " + tempoViagem + "ms");
+        System.out.println("Distância Total: " + distanciaTotal + "px");
+        System.out.println("Ticks Totais: " + totalTicks);
+        System.out.println("Velocidade Calculada: " + this.TRAIN_SPEED + " pixels/tick");
+
+        timer = new Timer(tickMs, this);
         timer.start();
     }
 
     private void loadImages() {
         imgBackground = loadImage("/images/paisagem.jpg");
+        imgPackerIdle = loadImage("/images/Psleep.png");
         Image imgTrainOriginal = loadImage("/images/trem.png");
         imgTrain = imgTrainOriginal.getScaledInstance(TREM_LARGURA_DESEJADA, TREM_ALTURA_DESEJADA, Image.SCALE_SMOOTH);
+        imgPackerWorking = loadImage("/images/Ppacking.png");
+        Image imgTrainOriginal_Right = loadImage("/images/trem.png"); // Supondo que 'trem.png' seja para a direita
+        imgTrain = imgTrainOriginal_Right.getScaledInstance(TREM_LARGURA_DESEJADA, TREM_ALTURA_DESEJADA, Image.SCALE_SMOOTH);
+
+        // 2. Carrega a imagem do trem virada para a esquerda (a que você já inverteu e salvou)
+        Image imgTrainOriginal_Left = loadImage("/images/tremInvertido.png"); // Supondo que 'trem_flipped.png' seja a invertida
+        imgTrain_Flipped = imgTrainOriginal_Left.getScaledInstance(TREM_LARGURA_DESEJADA, TREM_ALTURA_DESEJADA, Image.SCALE_SMOOTH);
 
         // [REMOVIDO] Carregamento das imagens antigas (e_dormindo, e_trabalhando)
 
@@ -128,29 +194,63 @@ public class CenarioPanel extends JPanel implements ActionListener {
      * as variáveis de animação (frontend).
      */
     private void updateVisualState() {
-        // --- Atualizar Trem ---
+        // --- 0. Inicializar Posição B (se ainda não foi feito) ---
+        // Não podemos usar getWidth() no construtor (dá 0).
+        // Fazemos isso aqui, no primeiro tick.
+        if (posB == -1) {
+            if (getWidth() == 0) return; // Espera o painel estar pronto
+
+            // getWidth() é a largura da tela (1200)
+            // posB é o trem "saindo" da tela
+            posB = getWidth();
+            System.out.println("Posição B (tela) inicializada para: " + posB);
+        }
+
+        // --- 1. Ler o status do Backend ---
         String statusTrem = gerente.getStatusDoTrem();
 
-        // Define o "alvo" do trem baseado no status
+        // --- 2. Detectar MUDANÇA de Status ---
+        // O status mudou (ex: de "Carregando" para "Viajando")?
+        if (!statusTrem.equals(lastKnownStatus)) {
+            System.out.println("STATUS MUDOU: de '" + lastKnownStatus + "' para '" + statusTrem + "'");
+
+            // REINICIA O RELÓGIO DA ANIMAÇÃO!
+            animationStartTime = System.currentTimeMillis();
+            lastKnownStatus = statusTrem;
+        }
+
+        // --- 3. Calcular Posição Baseada no TEMPO ---
+
+        // Quanto tempo (ms) passou desde que a animação (viagem) começou?
+        long timeElapsed = System.currentTimeMillis() - animationStartTime;
+
+        // Qual o percentual completo da viagem? (de 0.0 a 1.0)
+        // Usamos Math.min(1.0, ...) para travar em 100% (1.0)
+        double percentComplete = Math.min(1.0, (double) timeElapsed / this.tempoViagem);
+
+        // --- 4. Definir a Posição X baseado no Percentual ---
+
         if (statusTrem.equals("Viajando (A -> B)")) {
-            // Alvo = Lado direito da tela
-            trainTargetX = getWidth() - imgTrain.getWidth(null);
+            isTrainFacingLeft = false;
+
+            // Posição = (Início) + (Distância Total * Percentual)
+            trainX = (int) (posA + ( (posB - posA) * percentComplete) );
+
         } else if (statusTrem.equals("Retornando (B -> A)")) {
-            // Alvo = Lado esquerdo da tela
-            trainTargetX = 0;
-        } else if (statusTrem.equals("Esperando carregamento!") || statusTrem.equals("Carregando...")) {
-            // Alvo = Lado esquerdo (Estação A)
-            trainTargetX = 0;
+            isTrainFacingLeft = true;
+
+            // Posição = (Fim) - (Distância Total * Percentual)
+            trainX = (int) (posB - ( (posB - posA) * percentComplete) );
+
+        } else { // "Esperando", "Carregando", etc.
+            isTrainFacingLeft = false;
+            trainX = posA; // Trava o trem na Posição A (fora da tela)
         }
 
-        // Move o trem suavemente em direção ao alvo
-        if (trainX < trainTargetX) {
-            trainX = Math.min(trainX + TRAIN_SPEED, trainTargetX);
-        } else if (trainX > trainTargetX) {
-            trainX = Math.max(trainX - TRAIN_SPEED, trainTargetX);
-        }
+        // Garante que o trem não "passe" do limite
+        trainX = Math.max(posA, Math.min(posB, trainX));
 
-        // --- Atualizar Empacotadores ---
+        // --- 5. Atualizar Empacotadores (como antes) ---
         this.packerStatusMap = gerente.getStatusDosEmpacotadores();
     }
 
@@ -170,12 +270,85 @@ public class CenarioPanel extends JPanel implements ActionListener {
 
         // 2. Desenhar o Trem
         // Desenha o trem na sua posição X/Y atual
-        g2d.drawImage(imgTrain, trainX, trainY, TREM_LARGURA_DESEJADA, TREM_ALTURA_DESEJADA, this);
+        Image imagemDoTremAtual;
+        if (isTrainFacingLeft) {
+            imagemDoTremAtual = imgTrain_Flipped;
+        } else {
+            imagemDoTremAtual = imgTrain; // O normal, virado para a direita
+        }
+        g2d.drawImage(imagemDoTremAtual, trainX, trainY, TREM_LARGURA_DESEJADA, TREM_ALTURA_DESEJADA, this);
 
-        // 3. [REMOVIDO] Bloco de desenho dos empacotadores antigos
-        // ...
+        // --- [LÓGICA DE DESENHO DINÂMICO DOS EMPACOTADORES] ---
 
-        // 4. Desenhar o HUD no topo
+        // 3. Desenhar os Empacotadores
+        if (packerStatusMap == null || packerStatusMap.isEmpty()) {
+            drawStatusHUD(g2d);
+            return;
+        }
+
+        g2d.setColor(Color.WHITE);
+        g2d.setFont(new Font("Arial", Font.BOLD, 12));
+
+        Map<Integer, String> sortedPackerMap = new TreeMap<>(packerStatusMap);
+
+        int numPackers = sortedPackerMap.size();
+        int esteiraLarguraUtil = ESTEIRA_END_X - ESTEIRA_START_X;
+
+        int espacamento;
+        if (numPackers > 1) {
+            espacamento = esteiraLarguraUtil / (numPackers - 1);
+        } else {
+            espacamento = 0; // Só há um empacotador
+        }
+
+        int packerIndex = 0; // Índice de 0 a N-1
+
+        for (Map.Entry<Integer, String> entry : sortedPackerMap.entrySet()) {
+            int id = entry.getKey();
+            String status = entry.getValue();
+
+            // --- Lógica de Posição X (Dinâmica) ---
+            int drawX = ESTEIRA_START_X + (packerIndex * espacamento);
+
+            // --- (MERGE) Lógica de Posição Y, Imagem e TAMANHO (Dinâmica) ---
+            Image packerImage;
+            int drawY;
+            int drawWidth;  // <- NOVA VARIÁVEL
+            int drawHeight; // <- NOVA VARIÁVEL
+
+            if (status.equals("Empacotando")) {
+                packerImage = imgPackerWorking;
+                drawY = Y_POS_EMPACOTANDO;       // (Seu valor: 792)
+                drawWidth = LARGURA_EMPACOTANDO; // (Valor do merge: 100)
+                drawHeight = ALTURA_EMPACOTANDO;// (Valor do merge: 100)
+
+            } else if (status.equals("Esperando vaga")) {
+                packerImage = imgPackerIdle;
+                drawY = Y_POS_ESPERANDO_VAGA;    // (Seu valor: 900)
+                drawWidth = LARGURA_ESPERANDO;   // (Valor do merge: 90)
+                drawHeight = ALTURA_ESPERANDO;  // (Valor do merge: 90)
+
+            } else {
+                // Default: "Dormindo", "Idle", etc.
+                packerImage = imgPackerIdle;
+                drawY = Y_POS_BASE;              // (Seu valor: 900)
+                drawWidth = LARGURA_BASE;        // (Valor do merge: 90)
+                drawHeight = ALTURA_BASE;       // (Valor do merge: 90)
+            }
+            // --- Fim da Lógica ---
+
+
+            // (MERGE) Desenha a imagem com tamanho dinâmico
+            g2d.drawImage(packerImage, drawX, drawY, drawWidth, drawHeight, this);
+
+            // (MERGE) Desenha o status relativo ao tamanho dinâmico
+            g2d.drawString(String.format("[%d] %s", id, status), drawX, drawY + drawHeight + 15);
+
+            packerIndex++; // Incrementa o índice para o próximo empacotador
+        }
+
+        // --- [FIM DA LÓGICA DE DESENHO] ---
+
         drawStatusHUD(g2d);
     }
 
@@ -218,15 +391,32 @@ public class CenarioPanel extends JPanel implements ActionListener {
         }
 
         // --- 2. Desenhar Fundo do HUD ---
-        g2d.setColor(new Color(0, 0, 0, 150)); // Cor preta, 60% transparente
-        int hudHeight = 120;
-        g2d.fillRect(0, 0, getWidth(), hudHeight); // Desenha a barra no topo
+        // Cor preta, 60% transparente (alpha 150 de 255)
+        g2d.setColor(new Color(0, 0, 0, 150));
 
-        // --- 3. Desenhar Texto da Coluna 1 ---
+        // Define a altura do HUD (ex: 120 pixels)
+        int hudHeight = 120;
+        g2d.fillRect(0, 0, getWidth(), hudHeight);
+
+        // --- 3. Desenhar Texto ---
         g2d.setColor(Color.WHITE);
+        int xPadding = 5;
+        int yPos = 25;
+
+        // Coluna 1: Status Geral
+        g2d.setFont(new Font("Arial", Font.BOLD, 16));
+        g2d.drawString(String.format("Armazém: %d / %d", caixasArmazem, this.capacidadeDoDeposito), xPadding, yPos);
+        yPos += 25;
+        g2d.drawString(String.format("Carga no Trem: %d / %d", caixasTrem, this.capacidadeDoTrem), xPadding, yPos);
+        yPos += 25;
+        g2d.drawString(String.format("Status Trem: %s", statusTrem), xPadding, yPos);
+
+        // Coluna 2: Status Empacotadores
+        int xPosPackers = 350;
+        yPos = 25;
+
         g2d.setFont(new Font("Arial", Font.BOLD, 16));
 
-        int xPadding = 10; // Espaçamento da borda esquerda
         int yStart = 25;   // Posição Y inicial
 
         g2d.drawString(String.format("Armazém: %d / %d", caixasArmazem, this.capacidadeDoDeposito), xPadding, yStart);
@@ -247,24 +437,26 @@ public class CenarioPanel extends JPanel implements ActionListener {
         // (Tamanho do ícone aumentado para 60x60 no loadImages)
         int iconWidth = 60;
         int iconHeight = 60;
-        
+
         // (AJUSTADO) Espaçamento horizontal aumentado para 200px
         // O painel tem 1200px. A área de texto ~350px.
         // Sobram ~850px. 850 / 4 = ~212px por empacotador.
         // 200px de espaçamento total deve funcionar bem.
-        int horizontalSpacing = 200; 
-        
+        int horizontalSpacing = 200;
+
         int verticalTextOffset = iconHeight + 5; // Espaço abaixo do ícone para o texto
 
         // Fontes
         Font fontNome = new Font("Arial", Font.BOLD, 12);
         Font fontStatus = new Font("Monospaced", Font.PLAIN, 10); // Fonte menor para status
+        g2d.setFont(new Font("Monospaced", Font.PLAIN, 12));
 
         if (packerStatusMap != null) {
             // 1. Coletar e ordenar as entradas por ID (chave)
             List<Map.Entry<Integer, String>> sortedPackers =
                     new ArrayList<>(packerStatusMap.entrySet());
             sortedPackers.sort(Map.Entry.comparingByKey());
+            Map<Integer, String> sortedMapForHUD = new TreeMap<>(packerStatusMap);
 
             // 2. Iterar e desenhar, limitado a 4
             int count = 0;
