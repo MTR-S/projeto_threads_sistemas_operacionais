@@ -5,12 +5,10 @@ import com.projetotrem.sync.GerenteDaEstacao;
 public class Trem implements Runnable {
 
     private GerenteDaEstacao gerenteDaEstacao;
-    private int quantidadeTransportada;
-    private int tempoViagem;
+    private long tempoViagem;
 
-    public Trem(GerenteDaEstacao gerenteDaEstacao, int quantidadeTransportada,int tempoViagem) {
+    public Trem(GerenteDaEstacao gerenteDaEstacao, long tempoViagem) {
         this.gerenteDaEstacao = gerenteDaEstacao;
-        this.quantidadeTransportada = quantidadeTransportada;
         this.tempoViagem = tempoViagem;
 
         this.gerenteDaEstacao.setStatusDoTrem("Iniciando");
@@ -20,12 +18,14 @@ public class Trem implements Runnable {
     public void run() {
         try {
             while(true) {
-
                 gerenteDaEstacao.carregaTrem();
-                processoAleatorioCpuBound();
-                gerenteDaEstacao.setStatusDoTrem("Retornando");
+
+                gerenteDaEstacao.setStatusDoTrem("Viajando (A -> B)");
                 processoAleatorioCpuBound();
 
+                gerenteDaEstacao.setStatusDoTrem("Retornando (B -> A)");
+                processoAleatorioCpuBound();
+                gerenteDaEstacao.setStatusDoTrem("Retornando (B -> A)");
             }
         }catch (Exception e) {
             gerenteDaEstacao.setStatusDoTrem("Interrompido");
@@ -35,8 +35,11 @@ public class Trem implements Runnable {
 
     private void processoAleatorioCpuBound() {
         long tempo = this.tempoViagem;
+
         System.out.println("Iniciando CPU-Bound (Trem) por " + tempo + "ms...");
+
         long endTime = System.currentTimeMillis() + tempo;
+
         double soma = 0;
         while (System.currentTimeMillis() < endTime) {
             soma = soma + Math.sin(Math.random()) + Math.cos(Math.random());

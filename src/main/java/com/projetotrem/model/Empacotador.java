@@ -49,16 +49,4 @@ public class Empacotador implements Runnable {
 
         System.out.println("...Trabalho CPU-Bound (Empacotador) concluído.");
     }
-
-    public int getId() {
-        return id;
-    }
-
-    public void setId(int id) {
-        this.id = id;
-    }
-
-    public void setTempoEmpacotamento(Long tempoEmpacotamento) {
-        this.tempoEmpacotamento = tempoEmpacotamento;
-    }
 }

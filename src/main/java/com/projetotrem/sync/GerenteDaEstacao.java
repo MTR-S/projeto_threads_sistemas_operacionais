@@ -52,11 +52,13 @@ public class GerenteDaEstacao {
     }
 
     public void carregaTrem() throws InterruptedException {
+
         setStatusDoTrem("Esperando carregamento!");
         quantidadeDeCaixasNoDeposito.acquire(capacidadeDoTrem);
+
         mutex.acquire();
         try {
-            _unsafe_setStatusDoTrem("Entregando");
+            _unsafe_setStatusDoTrem("Carregando...");
 
             quantidadeDeCaixasDepositadas -= capacidadeDoTrem;
 
@@ -66,6 +68,7 @@ public class GerenteDaEstacao {
         }
 
         espacosDisponiveisNoDeposito.release(capacidadeDoTrem);
+
     }
 
 
@@ -144,38 +147,11 @@ public class GerenteDaEstacao {
         return statusDosEmpacotadoresCopia;
     }
 
-    public void createEmpacotador(int idEmpacotador, Scanner sc) {
-        System.out.println("Qual o tempo de empacotamento em segundos deste empacotador?");
-        long tempoEmpacotamento = sc.nextLong();
-        Empacotador empacotador = new Empacotador(this, idEmpacotador, tempoEmpacotamento);
-        Thread t =  new Thread(empacotador);
-        t.start();
+    public int getCapacidadeDoTrem() {
+        return this.capacidadeDoTrem;
     }
 
-    public void createTrem(int idTrem, Scanner sc) {
-        System.out.println("Qual o tempo de viagem em segundos do trem? Tempo de ir do A para o B");
-        int tempoViagem =  sc.nextInt();
-        Trem trem = new Trem(this, idTrem, tempoViagem);
-        Thread t =  new Thread(trem);
-        t.start();
-    }
-
-    public void getStatusSistema() {
-        while (true) {
-            for (Map.Entry<Integer, String> entry : getStatusDosEmpacotadores().entrySet()) {
-                Integer id = entry.getKey();
-                String status = entry.getValue();
-                System.out.println("Empacotador ID: " + id + " | Status: " + status);
-            }
-
-            System.out.println("Status do Trem: " + getStatusDoTrem());
-
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
+    public int getCapacidadeDoDeposito() {
+        return this.capacidadeDoDeposito;
     }
 }
