@@ -38,10 +38,6 @@ public class TelaConfiguracao extends JFrame {
         txtTempoViagemTrem = new JTextField("5000");
         painelFormulario.add(txtTempoViagemTrem);
 
-        painelFormulario.add(new JLabel("Tempo Padrão Pacote (ms):"));
-        txtTempoEmpacotamento = new JTextField("2000");
-        painelFormulario.add(txtTempoEmpacotamento);
-
         btnIniciarSimulacao = new JButton("Iniciar Simulação");
 
         painelPrincipal.add(painelFormulario, BorderLayout.CENTER);
@@ -65,7 +61,6 @@ public class TelaConfiguracao extends JFrame {
             int n = Integer.parseInt(txtCapacidadeTremN.getText());
 
             long tempoViagem = Long.parseLong(txtTempoViagemTrem.getText());
-            long tempoPacotePadrao = Long.parseLong(txtTempoEmpacotamento.getText());
 
             if (m < n) {
                 // Mostra uma popup de erro (JOptionPane)
@@ -80,10 +75,9 @@ public class TelaConfiguracao extends JFrame {
             System.out.println("Depósito (M): " + m);
             System.out.println("Trem (N): " + n);
             System.out.println("Tempo Viagem: " + tempoViagem);
-            System.out.println("Tempo Pacote Padrão: " + tempoPacotePadrao);
             System.out.println("---------------------------");
 
-            TelaPrincipalOriginal telaVisual = new TelaPrincipalOriginal(m, n, tempoViagem, tempoPacotePadrao);
+            TelaPrincipalOriginal telaVisual = new TelaPrincipalOriginal(m, n, tempoViagem);
             telaVisual.setVisible(true);
 
             this.dispose();

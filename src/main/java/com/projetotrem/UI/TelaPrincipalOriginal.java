@@ -11,33 +11,23 @@ import java.awt.event.ActionListener;
 
 public class TelaPrincipalOriginal extends JFrame {
     private GerenteDaEstacao gerenteDaEstacao;
-    private CenarioPanel cenarioPanel; // O nosso painel customizado
+    private CenarioPanel cenarioPanel;
 
-    // --- (NOVO) ---
-    private long tempoPacotePadrao;
-    private int proximoIdEmpacotador = 1; // Contador para IDs únicos
+    private int proximoIdEmpacotador = 1;
 
-    // [CONSTRUTOR MODIFICADO]
-    public TelaPrincipalOriginal(int m, int n, long tempoViagem, long tempoPacote) {
+    public TelaPrincipalOriginal(int m, int n, long tempoViagem) {
 
-        // 1. Iniciar o Backend
         this.gerenteDaEstacao = new GerenteDaEstacao(n, m);
-        this.tempoPacotePadrao = tempoPacote; // Salva o tempo padrão
 
-        // 2. Iniciar o Frontend (o Painel de Desenho)
         this.cenarioPanel = new CenarioPanel(gerenteDaEstacao, tempoViagem);
 
-        // 3. Configurar a Janela (JFrame)
         setTitle("Simulação Trem de Carga - Visual");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        // (NOVO) Usar BorderLayout para adicionar o botão abaixo
         setLayout(new BorderLayout());
 
-        // Adicionamos nosso painel de desenho ao CENTRO
         add(cenarioPanel, BorderLayout.CENTER);
 
-        // --- (NOVO) Criar o Painel de Controle com o Botão ---
         JPanel painelControle = new JPanel();
         painelControle.setBackground(Color.DARK_GRAY);
 
@@ -46,47 +36,31 @@ public class TelaPrincipalOriginal extends JFrame {
         btnCriarEmpacotador.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                // Chama a função para criar um novo empacotador
                 criarNovoEmpacotador();
             }
         });
 
         painelControle.add(btnCriarEmpacotador);
 
-        // #############################################################
-        // ### ÚNICA ALTERAÇÃO AQUI ###
-        // #############################################################
-        // O painel de controle agora vai na parte NORTE (em cima)
         add(painelControle, BorderLayout.NORTH);
-        // #############################################################
 
-        // Define o tamanho da janela para ser exatamente o tamanho do painel
-        pack(); // O pack() agora vai considerar o CenarioPanel E o painelControle
+        pack();
 
-        setLocationRelativeTo(null); // Centralizar
-        setResizable(false); // Não deixa o usuário redimensionar
+        setLocationRelativeTo(null);
+        setResizable(false);
 
-        // 4. Iniciar as Threads de Trabalho (Backend)
-        // [MODIFICADO] Passa o tempo de viagem, mas não o 'numEmpacotadores'
         iniciarThreadsBackend(tempoViagem);
     }
 
-    // [MÉTODO MODIFICADO]
     private void iniciarThreadsBackend(long tempoViagem) {
         System.out.println("Iniciando threads da simulação...");
 
-        // [REMOVIDO] Loop de criação de empacotadores
-        // for (int i = 0; i < numEmpacotadores; i++) { ... }
-
-        // Inicia a Thread do Trem (isso continua igual)
         new Thread(new Trem(gerenteDaEstacao, tempoViagem)).start();
 
         System.out.println("Thread do Trem iniciada. Aguardando criação de empacotadores...");
     }
 
-    // --- (NOVO) Método para criar um empacotador ---
     private void criarNovoEmpacotador() {
-        // 1. Pergunta o tempo ao usuário
         String resposta = JOptionPane.showInputDialog(
                 this,
                 "Qual o tempo de empacotamento (em segundos)?",
@@ -94,13 +68,11 @@ public class TelaPrincipalOriginal extends JFrame {
                 JOptionPane.QUESTION_MESSAGE
         );
 
-        // Se o usuário clicou "Cancelar" ou fechou a janela, 'resposta' será null
         if (resposta == null || resposta.trim().isEmpty()) {
             return; // Não faz nada
         }
 
         try {
-            // 2. Converte a resposta (de segundos para milissegundos)
             double segundos = Double.parseDouble(resposta.trim());
             long tempoPacoteMs = (long) (segundos * 1000);
 
@@ -109,16 +81,13 @@ public class TelaPrincipalOriginal extends JFrame {
                 return;
             }
 
-            // 3. Pega o próximo ID
             int id = this.proximoIdEmpacotador;
-            this.proximoIdEmpacotador++; // Incrementa para o próximo
+            this.proximoIdEmpacotador++;
 
-            // 4. Cria e inicia a nova thread do Empacotador
             System.out.println(String.format("Criando Empacotador [%d] com tempo de %d ms", id, tempoPacoteMs));
             Thread t = new Thread(new Empacotador(gerenteDaEstacao, id, tempoPacoteMs));
             t.start();
 
-            // 5. O CenarioPanel vai atualizar sozinho!
 
         } catch (NumberFormatException ex) {
             JOptionPane.showMessageDialog(this, "Valor inválido. Por favor, insira um número (ex: 2.5).", "Erro", JOptionPane.ERROR_MESSAGE);
