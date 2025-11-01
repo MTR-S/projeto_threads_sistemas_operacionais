@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="projeto1_threads:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/projeto1_threads_jar</output-path>
+    <root id="archive" name="projeto1_threads.jar">
+      <element id="module-output" name="projeto1_threads" />
+    </root>
+  </artifact>
+</component>
